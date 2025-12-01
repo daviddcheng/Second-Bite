@@ -5,3 +5,35 @@
 //  Created by David Cheng on 11/30/25.
 //
 
+import Foundation
+import CoreLocation
+
+struct DiningHall: Identifiable, Codable, Hashable {
+    let id: UUID
+    let name: String
+    let description: String
+    let latitude: Double
+    let longitude: Double
+    let leftovers: [LeftoverItem]
+    
+    // Distance will later be filled in by the location logic
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
+    init(
+        id: UUID = UUID(),
+        name: String,
+        description: String,
+        latitude: Double,
+        longitude: Double,
+        leftovers: [LeftoverItem]
+    ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.latitude = latitude
+        self.longitude = longitude
+        self.leftovers = leftovers
+    }
+}

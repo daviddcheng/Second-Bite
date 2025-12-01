@@ -8,17 +8,34 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var appViewModel: AppViewModel
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            MapScreen()
+                .tabItem {
+                    Label("Map", systemImage: "map")
+                }
+            
+            LeftoversListView()
+                .tabItem {
+                    Label("Leftovers", systemImage: "takeoutbag.and.cup.and.straw")
+                }
+            
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person.crop.circle")
+                }
+            
+            ChatView()
+                .tabItem {
+                    Label("AI Chat", systemImage: "message")
+                }
         }
-        .padding()
     }
 }
 
 #Preview {
     MainTabView()
+        .environmentObject(AppViewModel())
 }
