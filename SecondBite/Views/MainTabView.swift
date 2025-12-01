@@ -12,7 +12,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
-            MapScreen()
+            MapView()
                 .tabItem {
                     Label("Map", systemImage: "map")
                 }
