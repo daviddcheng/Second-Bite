@@ -77,8 +77,6 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - Profile Header Card
-
 struct ProfileHeaderCard: View {
     let preferences: UserPreferences
     
@@ -127,8 +125,6 @@ struct ProfileHeaderCard: View {
     }
 }
 
-// MARK: - Balance Card
-
 struct BalanceCard: View {
     let balance: Double
     let onAddFunds: () -> Void
@@ -175,8 +171,6 @@ struct BalanceCard: View {
         .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
-
-// MARK: - Dietary Preferences Card
 
 struct DietaryPreferencesCard: View {
     let preferences: UserPreferences
@@ -244,8 +238,6 @@ struct DietaryTag: View {
     }
 }
 
-// MARK: - Favorite Dining Halls Card
-
 struct FavoriteDiningHallsCard: View {
     let favorites: [String]
     let allHalls: [DiningHall]
@@ -284,8 +276,6 @@ struct FavoriteDiningHallsCard: View {
         .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
-
-// MARK: - Settings Card
 
 struct SettingsCard: View {
     let onEditPreferences: () -> Void
@@ -332,8 +322,6 @@ struct SettingsCard: View {
         .shadow(color: .black.opacity(0.05), radius: 8, y: 2)
     }
 }
-
-// MARK: - Flow Layout for Tags
 
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
@@ -394,8 +382,6 @@ struct FlowLayout: Layout {
         }
     }
 }
-
-// MARK: - Preferences Form (uses AppViewModel directly)
 
 struct PreferencesFormViewNew: View {
     @Environment(\.dismiss) private var dismiss

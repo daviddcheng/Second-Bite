@@ -38,9 +38,7 @@ struct DiningHallDetailView: View {
             Text(alertMessage)
         }
     }
-    
-    // MARK: - Sections
-    
+        
     private var heroImage: some View {
         ZStack(alignment: .bottomLeading) {
             // Dining hall hero image
@@ -50,7 +48,7 @@ struct DiningHallDetailView: View {
                 .frame(height: 220)
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .overlay(
-                    // Dark gradient overlay for text readability
+                    // Dark gradient overlay
                     LinearGradient(
                         colors: [
                             Color.clear,

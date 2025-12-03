@@ -9,8 +9,6 @@ import Foundation
 import SwiftUI
 import Combine
 
-/// ViewModel for the AI Chat feature
-/// Manages conversation history and AI interactions
 @MainActor
 final class ChatViewModel: ObservableObject {
     
@@ -70,19 +68,19 @@ final class ChatViewModel: ObservableObject {
         isLoading = false
     }
     
-    /// Clear chat history and start fresh
+    // Clear chat history and start fresh
     func clearChat() {
         messages.removeAll()
         addWelcomeMessage()
         errorMessage = nil
     }
     
-    /// Check if AI model is available
+    // Check if AI model is available
     var isModelAvailable: Bool {
         aiService.modelStatus == .available
     }
     
-    /// Get model status message for display
+    // Get model status message for display
     var modelStatusMessage: String? {
         switch aiService.modelStatus {
         case .checking:

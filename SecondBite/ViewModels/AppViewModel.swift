@@ -13,7 +13,10 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
     // Core app state
     @Published var diningHalls: [DiningHall]
     
-    // User preferences - single source of truth for user data including balance
+    // Current reservation
+    @Published var currentReservation: Reservation?
+    
+    // User preferences
     @Published var userPreferences: UserPreferences {
         didSet {
             // Persist any changes to user preferences
@@ -21,7 +24,7 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         }
     }
     
-    // Computed property for dining balance - uses userPreferences as single source of truth
+    // Computed property for dining balance
     var diningBalance: Double {
         get { userPreferences.balance }
         set {
@@ -31,6 +34,14 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
 
     @Published var userLocation: CLLocation?
     @Published var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
+    
+    // Reservation model
+    struct Reservation: Identifiable {
+        let id = UUID()
+        let diningHall: DiningHall
+        let pickupTime: String
+        let timestamp: Date
+    }
 
     private let locationService = LocationService()
     private let persistenceService = PersistenceService.shared
@@ -41,7 +52,7 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         locationService.delegate = self
     }
     
-    /// Reload preferences from storage (useful when returning from other views)
+    /// Reload preferences from storage
     func reloadPreferences() {
         userPreferences = persistenceService.loadUserPreferences()
     }
@@ -58,8 +69,6 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         locationService.stopUpdatingLocation()
     }
 
-    // MARK: - LocationServiceDelegate
-
     func locationService(_ service: LocationService,
                          didUpdateAuthorization status: CLAuthorizationStatus) {
         DispatchQueue.main.async {
@@ -74,12 +83,23 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         }
     }
     
-    /// Reserve a surprise bag from a dining hall
-    /// Deducts $10 from the user's balance if they have sufficient funds
+    // Reserve a surprise bag from a dining hall
     func reserve(from hall: DiningHall) -> Bool {
-        // For now, a simple flat $10 reservation that cannot overdraft
         guard diningBalance >= 10 else { return false }
         diningBalance -= 10
+        
+        // Set the current reservation
+        currentReservation = Reservation(
+            diningHall: hall,
+            pickupTime: "7:45 PM – 8:30 PM",
+            timestamp: Date()
+        )
+        
         return true
+    }
+    
+    // Cancel current reservation
+    func cancelReservation() {
+        currentReservation = nil
     }
 }

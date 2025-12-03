@@ -33,7 +33,6 @@ final class AIService: ObservableObject {
     }
     
     private init() {
-        // Initialize with gemini-2.5-flash (fastest, best balance)
         self.model = GenerativeModel(
             name: "gemini-2.5-flash",
             apiKey: apiKey,
@@ -78,12 +77,8 @@ final class AIService: ObservableObject {
             }
             
             return text.trimmingCharacters(in: .whitespacesAndNewlines)
-        } catch let error as GenerateContentError {
-            print("Gemini Error: \(error)")
-            // Rate limit or quota errors
-            throw AIError.rateLimitExceeded
         } catch {
-            print("Unexpected Error: \(error)")
+            print("Gemini Error: \(error)")
             throw AIError.rateLimitExceeded
         }
     }
@@ -98,6 +93,8 @@ final class AIService: ObservableObject {
         You are a helpful food recommendation assistant for Second Bite, a college dining app that helps students find leftover food at reduced prices from Penn dining halls.
         
         Be friendly, concise, and helpful. When recommending food, always mention the dining hall name, item name, and price. Always consider the user's dietary restrictions carefully - never recommend food that violates their restrictions.
+
+        DO NOT recommend food in markup. DO NOT use asterisks to indicate bolding. YOU ARE PRINTING RAW STRING.
         
         USER INFORMATION:
         - Name: \(preferences.name)
@@ -142,20 +139,14 @@ final class AIService: ObservableObject {
     
     enum AIError: LocalizedError {
         case noResponse
-        case invalidAPIKey
         case rateLimitExceeded
-        case apiError(String)
         
         var errorDescription: String? {
             switch self {
             case .noResponse:
                 return "No response received from Gemini"
-            case .invalidAPIKey:
-                return "Invalid API key"
             case .rateLimitExceeded:
                 return "YOUR API KEY HAS RUN OUT OF REQUESTS. PLEASE WAIT A MINUTE BEFORE RETRYING"
-            case .apiError(let message):
-                return "API Error: \(message)"
             }
         }
     }

@@ -127,7 +127,8 @@ enum SampleData {
             leftovers: [
                 LeftoverItem(name: "Sushi Rolls", quantity: 10, isVegetarian: false),
                 LeftoverItem(name: "Veggie Rice Bowls", quantity: 7, isVegetarian: true)
-            ]
+            ],
+            imageName: "Houston"
         ),
         
         DiningHall(
@@ -138,7 +139,8 @@ enum SampleData {
             leftovers: [
                 LeftoverItem(name: "Family-Style Pasta", quantity: 5, isVegetarian: true),
                 LeftoverItem(name: "Roasted Veggies", quantity: 8, isVegetarian: true, isVegan: true)
-            ]
+            ],
+            imageName: "Quaker"
         ),
 
         DiningHall(
@@ -149,7 +151,8 @@ enum SampleData {
             leftovers: [
                 LeftoverItem(name: "Wraps", quantity: 6),
                 LeftoverItem(name: "Fruit Cups", quantity: 12, isVegetarian: true, isVegan: true)
-            ]
+            ],
+            imageName: "Pret"
         ),
 
         DiningHall(
@@ -160,7 +163,8 @@ enum SampleData {
             leftovers: [
                 LeftoverItem(name: "Spicy-Tuna Roll", quantity: 9),
                 LeftoverItem(name: "Pork Udon", quantity: 14)
-            ]
+            ],
+            imageName: "Mcklend"
         )
     ]
 }

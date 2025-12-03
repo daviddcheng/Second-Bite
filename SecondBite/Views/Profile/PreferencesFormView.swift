@@ -37,7 +37,6 @@ struct PreferencesFormView: View {
                 Section("Dietary Restrictions") {
                     Toggle("Vegetarian", isOn: $isVegetarian)
                         .onChange(of: isVegetarian) { _, newValue in
-                            // If vegetarian is turned off, vegan should also be off
                             if !newValue {
                                 isVegan = false
                             }

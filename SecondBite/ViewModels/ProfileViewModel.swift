@@ -9,8 +9,6 @@ import Foundation
 import SwiftUI
 import Combine
 
-/// ViewModel for the Profile feature
-/// Manages user preferences, balance, and settings
 @MainActor
 final class ProfileViewModel: ObservableObject {
     
@@ -30,24 +28,22 @@ final class ProfileViewModel: ObservableObject {
         self.preferences = persistenceService.loadUserPreferences()
     }
     
-    /// Reload preferences from storage (useful when returning to profile view)
+    // Reload preferences from storage
     func reloadPreferences() {
         preferences = persistenceService.loadUserPreferences()
     }
     
-    /// Save current preferences to storage
+    // Save current preferences to storage
     func savePreferences() {
         persistenceService.saveUserPreferences(preferences)
     }
     
-    /// Update a single preference and save
+    // Update a single preference and save
     func updatePreferences(_ newPreferences: UserPreferences) {
         preferences = newPreferences
         savePreferences()
     }
     
-    /// Attempt to purchase an item. Returns true if successful.
-    /// This method is called from the Dining Hall screen when a user buys food.
     func purchaseItem(price: Double, itemName: String) -> Bool {
         guard preferences.canAfford(price: price) else {
             purchaseAlert = PurchaseAlert(
@@ -67,13 +63,13 @@ final class ProfileViewModel: ObservableObject {
         return true
     }
     
-    /// Add dining dollars to balance (for testing/demo purposes)
+    // Add dining dollars to balance
     func addFunds(amount: Double) {
         preferences.balance += amount
         savePreferences()
     }
     
-    /// Toggle a dining hall as favorite
+    // Toggle a dining hall as favorite
     func toggleFavoriteDiningHall(_ hallName: String) {
         if preferences.favoriteDiningHalls.contains(hallName) {
             preferences.favoriteDiningHalls.removeAll { $0 == hallName }
@@ -83,12 +79,12 @@ final class ProfileViewModel: ObservableObject {
         savePreferences()
     }
     
-    /// Check if a dining hall is favorited
+    // Check if a dining hall is favorited
     func isFavorite(_ hallName: String) -> Bool {
         preferences.favoriteDiningHalls.contains(hallName)
     }
     
-    /// Reset to default preferences
+    // Reset to default preferences
     func resetToDefaults() {
         preferences = UserPreferences()
         savePreferences()

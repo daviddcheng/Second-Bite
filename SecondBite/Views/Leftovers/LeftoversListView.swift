@@ -20,6 +20,12 @@ struct LeftoversListView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         header
+                        
+                        // Show reservation card if there's an active reservation
+                        if let reservation = appViewModel.currentReservation {
+                            reservationCard(reservation: reservation)
+                        }
+                        
                         balanceCard
                         sectionHeader(title: "Top picks near you")
                         hallCards
@@ -64,6 +70,72 @@ struct LeftoversListView: View {
                 .font(.largeTitle.bold())
         }
         .padding(.top, 8)
+    }
+    
+    private func reservationCard(reservation: AppViewModel.Reservation) -> some View {
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.white)
+                        Text("Reservation Confirmed!")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.white)
+                    }
+                    
+                    Text(reservation.diningHall.name)
+                        .font(.title3.bold())
+                        .foregroundStyle(.white)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "clock")
+                            .font(.caption)
+                        Text("Pick up tonight • \(reservation.pickupTime)")
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.white.opacity(0.9))
+                }
+                
+                Spacer()
+                
+                // Dining hall thumbnail
+                Image(reservation.diningHall.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            
+            // Cancel button
+            Button {
+                withAnimation(.spring(response: 0.3)) {
+                    appViewModel.cancelReservation()
+                }
+            } label: {
+                Text("Cancel Reservation")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.white.opacity(0.2))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+        }
+        .padding(16)
+        .background(
+            LinearGradient(
+                colors: [Color.green, Color.teal],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Color.green.opacity(0.3), radius: 12, x: 0, y: 6)
+        .transition(.asymmetric(
+            insertion: .scale.combined(with: .opacity),
+            removal: .scale.combined(with: .opacity)
+        ))
     }
     
     private var balanceCard: some View {

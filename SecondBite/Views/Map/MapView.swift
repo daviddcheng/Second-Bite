@@ -15,13 +15,13 @@ import MapKit
 struct MapView: View {
     @EnvironmentObject var appViewModel: AppViewModel
 
-    // Start with automatic camera unless you prefer a region
+    // Start with automatic camera
     @State private var cameraPosition: MapCameraPosition = .automatic
 
     @State private var searchText: String = ""
-    @State private var selectedHall: DiningHall?        // ← for navigation
+    @State private var selectedHall: DiningHall?      
 
-    // Filtered hall list (used for pin display)
+    // Filtered hall list
     private var filteredHalls: [DiningHall] {
         let halls = appViewModel.diningHalls
         guard !searchText.isEmpty else { return halls }
@@ -34,10 +34,9 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // MARK: - Apple Map
                 Map(position: $cameraPosition) {
 
-                    UserAnnotation()   // 🔵 user location dot
+                    UserAnnotation()  
 
                     // Dining hall pins
                     ForEach(filteredHalls) { hall in
@@ -62,7 +61,7 @@ struct MapView: View {
                 }
                 .mapStyle(.standard)
                 .mapControls {
-                    MapCompass()     // ← Apple compass (top-right)
+                    MapCompass()   
                     MapScaleView()
                 }
                 .onAppear {
@@ -75,7 +74,7 @@ struct MapView: View {
                 .onChange(of: appViewModel.userLocation, initial: false) { _, loc in
                     guard let loc else { return }
 
-                    // Center map on user when first loaded
+                    // Center map
                     cameraPosition = .region(
                         MKCoordinateRegion(
                             center: loc.coordinate,
@@ -85,7 +84,6 @@ struct MapView: View {
                     )
                 }
 
-                // MARK: - Overlays (search + center button)
                 VStack {
                     // SEARCH BAR
                     HStack {
@@ -112,7 +110,7 @@ struct MapView: View {
                         .padding(10)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
-                        .frame(maxWidth: 300)      // controls width
+                        .frame(maxWidth: 300)      
                         Spacer()
                     }
                     .padding(.top, 15)
@@ -147,8 +145,6 @@ struct MapView: View {
         }
     }
 
-    // MARK: - ACTIONS
-
     private func centerOnUserLocation() {
         guard let loc = appViewModel.userLocation else { return }
 
@@ -161,14 +157,12 @@ struct MapView: View {
         )
     }
 
-    /// When user hits Return in search bar
     private func performSearch() {
         let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { return }
 
         let halls = appViewModel.diningHalls
 
-        // 1. Exact match
         if let exact = halls.first(where: {
             $0.name.compare(q, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
         }) {
@@ -176,7 +170,6 @@ struct MapView: View {
             return
         }
 
-        // 2. Partial match
         if let partial = halls.first(where: {
             $0.name.localizedCaseInsensitiveContains(q)
         }) {
@@ -185,7 +178,6 @@ struct MapView: View {
     }
 
     private func goTo(hall: DiningHall) {
-        // Zoom to hall
         cameraPosition = .region(
             MKCoordinateRegion(
                 center: hall.coordinate,
@@ -194,7 +186,6 @@ struct MapView: View {
             )
         )
 
-        // Navigate to detail view
         selectedHall = hall
 
         hideKeyboard()

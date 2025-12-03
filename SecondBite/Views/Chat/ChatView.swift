@@ -141,8 +141,6 @@ struct ChatInputBar: View {
     }
 }
 
-// MARK: - Typing Indicator
-
 struct TypingIndicator: View {
     @State private var animationOffset: CGFloat = 0
     
