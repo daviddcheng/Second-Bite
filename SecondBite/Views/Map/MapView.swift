@@ -23,6 +23,7 @@ struct MapView: View {
     )
 
     @State private var searchText: String = ""
+    @State private var selectedHall: DiningHall?
 
     // Halls filtered by the search bar
     private var filteredHalls: [DiningHall] {
@@ -45,22 +46,28 @@ struct MapView: View {
                     // Dining hall pins
                     ForEach(filteredHalls) { hall in
                         Annotation(hall.name, coordinate: hall.coordinate) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "mappin.circle.fill")
-                                    .font(.title)
+                            // 👇 Make pin tappable to open detail
+                            Button {
+                                selectedHall = hall
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.title)
 
-                                Text(hall.name)
-                                    .font(.caption2)
-                                    .padding(4)
-                                    .background(.thinMaterial)
-                                    .cornerRadius(6)
+                                    Text(hall.name)
+                                        .font(.caption2)
+                                        .padding(4)
+                                        .background(.thinMaterial)
+                                        .cornerRadius(6)
+                                }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
                 .mapStyle(.standard)
                 .mapControls {
-                    MapCompass()   // ← Apple’s built-in compass (top-right)
+                    MapCompass()   // Apple’s built-in compass (top-right)
                     MapScaleView()
                 }
                 // Ask for location + start updates when map appears
@@ -92,19 +99,18 @@ struct MapView: View {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.secondary)
 
-                            TextField("Search", text: $searchText)
+                            TextField("Search dining halls", text: $searchText)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
                         }
                         .padding(10)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
-                        .frame(maxWidth: 310)   // shorter bar
-                        // no extra leading padding here
-                        Spacer()                 // pushes everything else to the right
+                        .frame(maxWidth: 310)
+                        Spacer()
                     }
                     .padding(.top, 15)
-                    .padding(.horizontal, 16)    // left edge at 16, right side free
+                    .padding(.horizontal, 16)
 
                     Spacer()
 
@@ -126,6 +132,11 @@ struct MapView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            // 👇 When selectedHall is set, push detail view
+            .navigationDestination(item: $selectedHall) { hall in
+                DiningHallDetailView(hall: hall)
+                    .environmentObject(appViewModel)
+            }
         }
     }
 
