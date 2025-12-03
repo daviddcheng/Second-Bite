@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F80DDFD72EE0E5F700976EAC /* GoogleGenerativeAI in Frameworks */ = {isa = PBXBuildFile; productRef = F80DDFD62EE0E5F700976EAC /* GoogleGenerativeAI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		6395AE372EDD2EE700BB8C13 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F80DDFD72EE0E5F700976EAC /* GoogleGenerativeAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = SecondBite;
 			packageProductDependencies = (
+				F80DDFD62EE0E5F700976EAC /* GoogleGenerativeAI */,
 			);
 			productName = SecondBite;
 			productReference = 6395AE292EDD2EE600BB8C13 /* SecondBite.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 6395AE202EDD2EE500BB8C13;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F80DDFD52EE0E5F700976EAC /* XCRemoteSwiftPackageReference "generative-ai-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6395AE2A2EDD2EE600BB8C13 /* Products */;
 			projectDirPath = "";
@@ -400,6 +409,7 @@
 				DEVELOPMENT_TEAM = 42QX3KF2ND;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to show nearby dining halls.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -433,6 +443,7 @@
 				DEVELOPMENT_TEAM = 42QX3KF2ND;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to show nearby dining halls.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -580,6 +591,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F80DDFD52EE0E5F700976EAC /* XCRemoteSwiftPackageReference "generative-ai-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google-gemini/generative-ai-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.6;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F80DDFD62EE0E5F700976EAC /* GoogleGenerativeAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F80DDFD52EE0E5F700976EAC /* XCRemoteSwiftPackageReference "generative-ai-swift" */;
+			productName = GoogleGenerativeAI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6395AE212EDD2EE500BB8C13 /* Project object */;
 }
