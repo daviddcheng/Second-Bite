@@ -9,18 +9,22 @@ import Foundation
 import GoogleGenerativeAI
 import Combine
 
-/// Service for AI-powered food recommendations using Google Gemini API
 @MainActor
 final class AIService: ObservableObject {
     
     static let shared = AIService()
     
-    // ============================================================
-    // MARK: - ⚠️ GEMINI API CONFIGURATION ⚠️
-    // ============================================================
-    private let apiKey = "AIzaSyAosGo8GO2t22MHF8ZCEfN-ghDHq8r_icE"
-    // ============================================================
+    // Load API key from Secrets.plist
+    private static func loadAPIKey() -> String {
+        guard let path = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
+              let dict = NSDictionary(contentsOfFile: path),
+              let key = dict["GEMINI_API_KEY"] as? String else {
+            fatalError("Secrets.plist not found or GEMINI_API_KEY missing. Please add Secrets.plist to your project.")
+        }
+        return key
+    }
     
+    private let apiKey: String
     private let model: GenerativeModel
     
     @Published var isProcessing: Bool = false
@@ -33,6 +37,7 @@ final class AIService: ObservableObject {
     }
     
     private init() {
+        self.apiKey = Self.loadAPIKey()
         self.model = GenerativeModel(
             name: "gemini-2.5-flash",
             apiKey: apiKey,
@@ -52,7 +57,6 @@ final class AIService: ObservableObject {
         modelStatus = .available
     }
     
-    /// Generate AI response based on user message, preferences, and available leftovers
     func generateResponse(
         userMessage: String,
         preferences: UserPreferences,
@@ -83,7 +87,6 @@ final class AIService: ObservableObject {
         }
     }
     
-    /// Build the full prompt with system context and user message
     private func buildFullPrompt(
         userMessage: String,
         preferences: UserPreferences,
@@ -134,9 +137,7 @@ final class AIService: ObservableObject {
         
         return prompt
     }
-    
-    // MARK: - Errors
-    
+        
     enum AIError: LocalizedError {
         case noResponse
         case rateLimitExceeded
