@@ -12,14 +12,19 @@ struct MainTabView: View {
     
     var body: some View {
         TabView {
+            LeftoversListView()
+                .tabItem {
+                    Label("Discover", systemImage: "safari")
+                }
+            
             MapView()
                 .tabItem {
                     Label("Map", systemImage: "map")
                 }
             
-            LeftoversListView()
+            ChatView()
                 .tabItem {
-                    Label("Leftovers", systemImage: "takeoutbag.and.cup.and.straw")
+                    Label("AI Chat", systemImage: "message")
                 }
             
             ProfileView()
@@ -27,10 +32,6 @@ struct MainTabView: View {
                     Label("Profile", systemImage: "person.crop.circle")
                 }
             
-            ChatView()
-                .tabItem {
-                    Label("AI Chat", systemImage: "message")
-                }
         }
     }
 }
