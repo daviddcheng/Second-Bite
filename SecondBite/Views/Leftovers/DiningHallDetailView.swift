@@ -43,16 +43,24 @@ struct DiningHallDetailView: View {
     
     private var heroImage: some View {
         ZStack(alignment: .bottomLeading) {
-            LinearGradient(
-                colors: [
-                    Color.gray.opacity(0.4),
-                    Color.gray.opacity(0.15)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .frame(height: 220)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            // Dining hall hero image
+            Image(hall.imageName)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .overlay(
+                    // Dark gradient overlay for text readability
+                    LinearGradient(
+                        colors: [
+                            Color.clear,
+                            Color.black.opacity(0.7)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                )
             
             VStack(alignment: .leading, spacing: 6) {
                 Text("Surprise Bag")

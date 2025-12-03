@@ -25,7 +25,8 @@ enum SampleData {
                     name: "Grilled Chicken Bowls",
                     quantity: 6
                 )
-            ]
+            ],
+            imageName: "1920Commons"
         ),
         
         DiningHall(
@@ -56,7 +57,8 @@ enum SampleData {
                     isHalal: true,
                     isGlutenFree: true
                 )
-            ]
+            ],
+            imageName: "HillHouse"
         ),
         
         DiningHall(
@@ -74,7 +76,8 @@ enum SampleData {
                     name: "Roasted Chicken",
                     quantity: 7
                 )
-            ]
+            ],
+            imageName: "EnglishHouse"
         ),
         
         DiningHall(
@@ -92,7 +95,8 @@ enum SampleData {
                     name: "Tandoori Chicken",
                     quantity: 5
                 )
-            ]
+            ],
+            imageName: "LauderCollegeHouse"
         ),
         
         DiningHall(
@@ -111,7 +115,8 @@ enum SampleData {
                     name: "Kosher Chicken Cutlets",
                     quantity: 6
                 )
-            ]
+            ],
+            imageName: "FalkKosherDining"
         ),
 
         DiningHall(

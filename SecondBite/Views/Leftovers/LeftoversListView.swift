@@ -129,17 +129,24 @@ struct LeftoversListView: View {
     private func hallCard(for hall: DiningHall) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .bottomLeading) {
-                // Image placeholder
-                LinearGradient(
-                    colors: [
-                        Color.gray.opacity(0.35),
-                        Color.gray.opacity(0.15)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(height: 160)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                // Dining hall image
+                Image(hall.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(height: 160)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .overlay(
+                        // Dark gradient overlay for text readability
+                        LinearGradient(
+                            colors: [
+                                Color.clear,
+                                Color.black.opacity(0.6)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    )
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(hall.name)
