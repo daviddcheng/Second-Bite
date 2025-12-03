@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 enum SampleData {
     static let halls: [DiningHall] = [

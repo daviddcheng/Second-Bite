@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 struct UserPreferences: Codable, Equatable {
     // Profile Info

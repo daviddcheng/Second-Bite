@@ -12,6 +12,10 @@ struct DiningHallDetailView: View {
     @EnvironmentObject var appViewModel: AppViewModel
     let hall: DiningHall
     
+    @State private var showingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -28,6 +32,11 @@ struct DiningHallDetailView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(hall.name)
         .navigationBarTitleDisplayMode(.inline)
+        .alert(alertTitle, isPresented: $showingAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(alertMessage)
+        }
     }
     
     // MARK: - Sections
@@ -234,7 +243,15 @@ struct DiningHallDetailView: View {
     }
     
     private func reserve() {
-        appViewModel.reserve(from: hall)
+        let success = appViewModel.reserve(from: hall)
+        if success {
+            alertTitle = "Reservation Confirmed!"
+            alertMessage = "Your surprise bag from \(hall.name) has been reserved. New balance: \(appViewModel.userPreferences.formattedBalance)"
+        } else {
+            alertTitle = "Insufficient Balance"
+            alertMessage = "You need at least $10.00 to reserve a surprise bag. Current balance: \(appViewModel.userPreferences.formattedBalance)"
+        }
+        showingAlert = true
     }
 }
 

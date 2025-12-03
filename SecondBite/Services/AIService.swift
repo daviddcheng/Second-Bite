@@ -6,20 +6,25 @@
 //
 
 import Foundation
-import FoundationModels
+import GoogleGenerativeAI
 import Combine
 
-/// Service for AI-powered food recommendations using Apple's Foundation Models
-/// Implements on-device language model for privacy-preserving recommendations
+/// Service for AI-powered food recommendations using Google Gemini API
 @MainActor
 final class AIService: ObservableObject {
     
     static let shared = AIService()
     
-    @Published var isProcessing: Bool = false
-    @Published var modelStatus: ModelStatus = .checking
+    // ============================================================
+    // MARK: - ⚠️ GEMINI API CONFIGURATION ⚠️
+    // ============================================================
+    private let apiKey = "AIzaSyAosGo8GO2t22MHF8ZCEfN-ghDHq8r_icE"
+    // ============================================================
     
-    private var session: LanguageModelSession?
+    private let model: GenerativeModel
+    
+    @Published var isProcessing: Bool = false
+    @Published var modelStatus: ModelStatus = .available
     
     enum ModelStatus: Equatable {
         case checking
@@ -28,28 +33,24 @@ final class AIService: ObservableObject {
     }
     
     private init() {
-        Task {
-            await checkModelAvailability()
-        }
-    }
-    
-    /// Check if Apple's on-device model is available
-    func checkModelAvailability() async {
-        let systemModel = SystemLanguageModel.default
-        
-        switch systemModel.availability {
-        case .available:
-            modelStatus = .available
-            session = LanguageModelSession()
-        case .unavailable(.appleIntelligenceNotEnabled):
-            modelStatus = .unavailable("Please enable Apple Intelligence in Settings")
-        case .unavailable(.deviceNotEligible):
-            modelStatus = .unavailable("This device does not support Apple Intelligence")
-        case .unavailable(.modelNotReady):
-            modelStatus = .unavailable("Model is downloading, please try again shortly")
-        @unknown default:
-            modelStatus = .unavailable("Model unavailable")
-        }
+        // Initialize with gemini-2.5-flash (fastest, best balance)
+        self.model = GenerativeModel(
+            name: "gemini-2.5-flash",
+            apiKey: apiKey,
+            generationConfig: GenerationConfig(
+                temperature: 0.7,
+                topP: 0.95,
+                topK: 40,
+                maxOutputTokens: 500
+            ),
+            safetySettings: [
+                SafetySetting(harmCategory: .harassment, threshold: .blockOnlyHigh),
+                SafetySetting(harmCategory: .hateSpeech, threshold: .blockOnlyHigh),
+                SafetySetting(harmCategory: .sexuallyExplicit, threshold: .blockOnlyHigh),
+                SafetySetting(harmCategory: .dangerousContent, threshold: .blockOnlyHigh)
+            ]
+        )
+        modelStatus = .available
     }
     
     /// Generate AI response based on user message, preferences, and available leftovers
@@ -59,39 +60,46 @@ final class AIService: ObservableObject {
         availableLeftovers: [DiningHall]
     ) async throws -> String {
         
-        guard case .available = modelStatus, let session = session else {
-            throw AIError.modelNotAvailable
-        }
-        
         isProcessing = true
         defer { isProcessing = false }
         
-        let contextPrompt = buildContextPrompt(
+        // Build the full prompt with context
+        let fullPrompt = buildFullPrompt(
+            userMessage: userMessage,
             preferences: preferences,
             availableLeftovers: availableLeftovers
         )
         
-        let fullPrompt = """
-        \(contextPrompt)
-        
-        User message: \(userMessage)
-        
-        Provide a helpful, friendly, and concise response. If recommending food, mention the dining hall name, item name, and price. Consider dietary restrictions carefully.
-        """
-        
-        let response = try await session.respond(to: Prompt(fullPrompt))
-        return response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            let response = try await model.generateContent(fullPrompt)
+            
+            guard let text = response.text else {
+                throw AIError.noResponse
+            }
+            
+            return text.trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch let error as GenerateContentError {
+            print("Gemini Error: \(error)")
+            // Rate limit or quota errors
+            throw AIError.rateLimitExceeded
+        } catch {
+            print("Unexpected Error: \(error)")
+            throw AIError.rateLimitExceeded
+        }
     }
     
-    /// Build context string for AI prompt with all relevant information
-    private func buildContextPrompt(
+    /// Build the full prompt with system context and user message
+    private func buildFullPrompt(
+        userMessage: String,
         preferences: UserPreferences,
         availableLeftovers: [DiningHall]
     ) -> String {
-        var context = """
+        var prompt = """
         You are a helpful food recommendation assistant for Second Bite, a college dining app that helps students find leftover food at reduced prices from Penn dining halls.
         
-        USER PREFERENCES:
+        Be friendly, concise, and helpful. When recommending food, always mention the dining hall name, item name, and price. Always consider the user's dietary restrictions carefully - never recommend food that violates their restrictions.
+        
+        USER INFORMATION:
         - Name: \(preferences.name)
         - Balance: \(preferences.formattedBalance) dining dollars
         - Max price per item: $\(String(format: "%.2f", preferences.maxPricePerItem))
@@ -100,40 +108,54 @@ final class AIService: ObservableObject {
         // Add dietary restrictions
         let restrictions = preferences.activeDietaryRestrictions
         if restrictions.isEmpty {
-            context += "\n- Dietary restrictions: None"
+            prompt += "\n- Dietary restrictions: None"
         } else {
-            context += "\n- Dietary restrictions: \(restrictions.joined(separator: ", "))"
+            prompt += "\n- Dietary restrictions: \(restrictions.joined(separator: ", ")) - IMPORTANT: Only recommend items that meet these requirements!"
         }
         
         // Add favorite dining halls if any
         if !preferences.favoriteDiningHalls.isEmpty {
-            context += "\n- Favorite dining halls: \(preferences.favoriteDiningHalls.joined(separator: ", "))"
+            prompt += "\n- Favorite dining halls: \(preferences.favoriteDiningHalls.joined(separator: ", "))"
         }
         
         // Add available leftovers
-        context += "\n\nCURRENTLY AVAILABLE LEFTOVERS:\n"
+        prompt += "\n\nCURRENTLY AVAILABLE LEFTOVERS:\n"
         
         for hall in availableLeftovers {
-            context += "\n\(hall.name):\n"
+            prompt += "\n\(hall.name):\n"
             for item in hall.leftovers {
                 var itemInfo = "  - \(item.name): \(item.formattedPrice), \(item.quantity) available"
                 if !item.dietaryTags.isEmpty {
                     itemInfo += " [\(item.dietaryTags.joined(separator: ", "))]"
                 }
-                context += itemInfo + "\n"
+                prompt += itemInfo + "\n"
             }
         }
         
-        return context
+        prompt += "\nKeep responses concise (2-3 sentences for simple questions, more for detailed recommendations). Be conversational and helpful."
+        prompt += "\n\n---\nUSER MESSAGE: \(userMessage)"
+        
+        return prompt
     }
     
+    // MARK: - Errors
+    
     enum AIError: LocalizedError {
-        case modelNotAvailable
+        case noResponse
+        case invalidAPIKey
+        case rateLimitExceeded
+        case apiError(String)
         
         var errorDescription: String? {
             switch self {
-            case .modelNotAvailable:
-                return "AI model is not available. Please check that Apple Intelligence is enabled."
+            case .noResponse:
+                return "No response received from Gemini"
+            case .invalidAPIKey:
+                return "Invalid API key"
+            case .rateLimitExceeded:
+                return "YOUR API KEY HAS RUN OUT OF REQUESTS. PLEASE WAIT A MINUTE BEFORE RETRYING"
+            case .apiError(let message):
+                return "API Error: \(message)"
             }
         }
     }

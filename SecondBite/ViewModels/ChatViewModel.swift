@@ -61,7 +61,7 @@ final class ChatViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
             let errorResponse = ChatMessage(
-                content: "Sorry, I encountered an issue: \(error.localizedDescription). Please make sure Apple Intelligence is enabled in your device settings.",
+                content: "Sorry, I encountered an issue: \(error.localizedDescription). Please check your API key and internet connection.",
                 isFromUser: false
             )
             messages.append(errorResponse)

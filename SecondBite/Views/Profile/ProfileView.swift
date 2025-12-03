@@ -9,42 +9,55 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var appViewModel: AppViewModel
-    @StateObject private var viewModel = ProfileViewModel()
+    @State private var showingPreferencesForm = false
+    @State private var showingAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Profile Header Card
-                    ProfileHeaderCard(preferences: viewModel.preferences)
+                    ProfileHeaderCard(preferences: appViewModel.userPreferences)
                     
                     // Balance Card
                     BalanceCard(
-                        balance: viewModel.preferences.balance,
+                        balance: appViewModel.userPreferences.balance,
                         onAddFunds: {
-                            viewModel.addFunds(amount: 25.00)
+                            appViewModel.userPreferences.balance += 25.00
+                            alertTitle = "Funds Added"
+                            alertMessage = "Added $25.00 to your balance. New balance: \(appViewModel.userPreferences.formattedBalance)"
+                            showingAlert = true
                         }
                     )
                     
                     // Dietary Preferences Card
-                    DietaryPreferencesCard(preferences: viewModel.preferences)
+                    DietaryPreferencesCard(preferences: appViewModel.userPreferences)
                     
                     // Favorite Dining Halls
                     FavoriteDiningHallsCard(
-                        favorites: viewModel.preferences.favoriteDiningHalls,
+                        favorites: appViewModel.userPreferences.favoriteDiningHalls,
                         allHalls: appViewModel.diningHalls,
                         onToggleFavorite: { hallName in
-                            viewModel.toggleFavoriteDiningHall(hallName)
+                            if appViewModel.userPreferences.favoriteDiningHalls.contains(hallName) {
+                                appViewModel.userPreferences.favoriteDiningHalls.removeAll { $0 == hallName }
+                            } else {
+                                appViewModel.userPreferences.favoriteDiningHalls.append(hallName)
+                            }
                         }
                     )
                     
                     // Settings Section
                     SettingsCard(
                         onEditPreferences: {
-                            viewModel.showingPreferencesForm = true
+                            showingPreferencesForm = true
                         },
                         onResetDefaults: {
-                            viewModel.resetToDefaults()
+                            appViewModel.userPreferences = UserPreferences()
+                            alertTitle = "Reset Complete"
+                            alertMessage = "Your preferences have been reset to defaults."
+                            showingAlert = true
                         }
                     )
                 }
@@ -52,24 +65,13 @@ struct ProfileView: View {
             }
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Profile")
-            .onAppear {
-                viewModel.reloadPreferences()
-                // Sync preferences with AppViewModel
-                appViewModel.userPreferences = viewModel.preferences
+            .sheet(isPresented: $showingPreferencesForm) {
+                PreferencesFormViewNew(appViewModel: appViewModel)
             }
-            .onChange(of: viewModel.preferences) { _, newPrefs in
-                // Keep AppViewModel in sync
-                appViewModel.userPreferences = newPrefs
-            }
-            .sheet(isPresented: $viewModel.showingPreferencesForm) {
-                PreferencesFormView(viewModel: viewModel)
-            }
-            .alert(item: $viewModel.purchaseAlert) { alert in
-                Alert(
-                    title: Text(alert.title),
-                    message: Text(alert.message),
-                    dismissButton: .default(Text("OK"))
-                )
+            .alert(alertTitle, isPresented: $showingAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -390,6 +392,117 @@ struct FlowLayout: Layout {
             
             self.size.height = y + rowHeight
         }
+    }
+}
+
+// MARK: - Preferences Form (uses AppViewModel directly)
+
+struct PreferencesFormViewNew: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var appViewModel: AppViewModel
+    
+    // Local state for editing
+    @State private var name: String = ""
+    @State private var email: String = ""
+    @State private var isVegetarian: Bool = false
+    @State private var isVegan: Bool = false
+    @State private var requiresGlutenFree: Bool = false
+    @State private var requiresHalal: Bool = false
+    @State private var maxPrice: Double = 10.0
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Profile Information") {
+                    TextField("Name", text: $name)
+                        .textContentType(.name)
+                    
+                    TextField("Email", text: $email)
+                        .textContentType(.emailAddress)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                }
+                
+                Section("Dietary Restrictions") {
+                    Toggle("Vegetarian", isOn: $isVegetarian)
+                        .onChange(of: isVegetarian) { _, newValue in
+                            if !newValue {
+                                isVegan = false
+                            }
+                        }
+                    
+                    Toggle("Vegan", isOn: $isVegan)
+                        .onChange(of: isVegan) { _, newValue in
+                            if newValue {
+                                isVegetarian = true
+                            }
+                        }
+                    
+                    Toggle("Gluten-Free", isOn: $requiresGlutenFree)
+                    
+                    Toggle("Halal", isOn: $requiresHalal)
+                }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Maximum Price Per Item")
+                            Spacer()
+                            Text(String(format: "$%.2f", maxPrice))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Slider(value: $maxPrice, in: 1...20, step: 0.50)
+                            .tint(.blue)
+                    }
+                } header: {
+                    Text("Budget")
+                } footer: {
+                    Text("Only show items at or below this price")
+                }
+            }
+            .navigationTitle("Edit Preferences")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        savePreferences()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+            .onAppear {
+                loadCurrentPreferences()
+            }
+        }
+    }
+    
+    private func loadCurrentPreferences() {
+        let prefs = appViewModel.userPreferences
+        name = prefs.name
+        email = prefs.email
+        isVegetarian = prefs.isVegetarian
+        isVegan = prefs.isVegan
+        requiresGlutenFree = prefs.requiresGlutenFree
+        requiresHalal = prefs.requiresHalal
+        maxPrice = prefs.maxPricePerItem
+    }
+    
+    private func savePreferences() {
+        appViewModel.userPreferences.name = name
+        appViewModel.userPreferences.email = email
+        appViewModel.userPreferences.isVegetarian = isVegetarian
+        appViewModel.userPreferences.isVegan = isVegan
+        appViewModel.userPreferences.requiresGlutenFree = requiresGlutenFree
+        appViewModel.userPreferences.requiresHalal = requiresHalal
+        appViewModel.userPreferences.maxPricePerItem = maxPrice
     }
 }
 

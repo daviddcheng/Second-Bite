@@ -12,18 +12,38 @@ import CoreLocation
 final class AppViewModel: ObservableObject, LocationServiceDelegate {
     // Core app state
     @Published var diningHalls: [DiningHall]
-
-    @Published var diningBalance: Double
+    
+    // User preferences - single source of truth for user data including balance
+    @Published var userPreferences: UserPreferences {
+        didSet {
+            // Persist any changes to user preferences
+            persistenceService.saveUserPreferences(userPreferences)
+        }
+    }
+    
+    // Computed property for dining balance - uses userPreferences as single source of truth
+    var diningBalance: Double {
+        get { userPreferences.balance }
+        set {
+            userPreferences.balance = newValue
+        }
+    }
 
     @Published var userLocation: CLLocation?
     @Published var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
 
     private let locationService = LocationService()
+    private let persistenceService = PersistenceService.shared
 
     init(diningHalls: [DiningHall] = SampleData.halls) {
         self.diningHalls = diningHalls
-        self.diningBalance = 300
+        self.userPreferences = PersistenceService.shared.loadUserPreferences()
         locationService.delegate = self
+    }
+    
+    /// Reload preferences from storage (useful when returning from other views)
+    func reloadPreferences() {
+        userPreferences = persistenceService.loadUserPreferences()
     }
 
     func requestLocationAccess() {
@@ -54,9 +74,12 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         }
     }
     
-    func reserve(from hall: DiningHall) {
-            // For now, a simple flat $10 reservation that cannot overdraft
-            guard diningBalance >= 10 else { return }
-            diningBalance -= 10
+    /// Reserve a surprise bag from a dining hall
+    /// Deducts $10 from the user's balance if they have sufficient funds
+    func reserve(from hall: DiningHall) -> Bool {
+        // For now, a simple flat $10 reservation that cannot overdraft
+        guard diningBalance >= 10 else { return false }
+        diningBalance -= 10
+        return true
     }
 }
