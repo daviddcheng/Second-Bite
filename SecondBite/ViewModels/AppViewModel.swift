@@ -13,7 +13,8 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
     // Core app state
     @Published var diningHalls: [DiningHall]
 
-    // Location-related state
+    @Published var diningBalance: Double
+
     @Published var userLocation: CLLocation?
     @Published var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
 
