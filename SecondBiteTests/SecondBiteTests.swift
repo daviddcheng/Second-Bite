@@ -1,10 +1,3 @@
-//
-//  SecondBiteTests.swift
-//  SecondBiteTests
-//
-//  Created by David Cheng on 11/30/25.
-//
-
 import Testing
 @testable import SecondBite
 

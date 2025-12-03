@@ -1,10 +1,3 @@
-//
-//  ChatMessage.swift
-//  SecondBite
-//
-//  Created by Advaith Satish on 12/03/25.
-//
-
 import Foundation
 
 struct ChatMessage: Identifiable, Equatable {

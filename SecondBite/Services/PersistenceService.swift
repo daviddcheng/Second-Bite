@@ -1,14 +1,5 @@
-//
-//  PersistenceService.swift
-//  SecondBite
-//
-//  Created by David Cheng on 11/30/25.
-//
-
 import Foundation
 
-/// Service for persisting user preferences using UserDefaults
-/// Implements Course Concept: Persistent Data Storage (Lecture 9)
 final class PersistenceService {
     
     static let shared = PersistenceService()
@@ -20,8 +11,6 @@ final class PersistenceService {
     }
     
     private init() {}
-    
-    // MARK: - User Preferences
     
     func saveUserPreferences(_ preferences: UserPreferences) {
         do {
@@ -52,7 +41,6 @@ final class PersistenceService {
         saveUserPreferences(preferences)
     }
     
-    /// Deduct amount from balance. Returns true if successful, false if insufficient funds.
     func deductFromBalance(amount: Double) -> Bool {
         var preferences = loadUserPreferences()
         guard preferences.balance >= amount else {

@@ -1,14 +1,3 @@
-//
-//  MapView.swift
-//  SecondBite
-//
-//  Created by David Cheng on 11/30/25.
-//
-//
-//  MapView.swift
-//  SecondBite
-//
-
 import SwiftUI
 import MapKit
 

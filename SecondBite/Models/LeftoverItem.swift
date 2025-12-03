@@ -1,10 +1,3 @@
-//
-//  LeftoverItem.swift
-//  SecondBite
-//
-//  Created by David Cheng on 11/30/25.
-//
-
 import Foundation
 
 struct LeftoverItem: Identifiable, Codable, Hashable {
