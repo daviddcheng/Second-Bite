@@ -9,23 +9,47 @@ import Foundation
 import Combine
 import CoreLocation
 
-final class AppViewModel: ObservableObject {
+final class AppViewModel: ObservableObject, LocationServiceDelegate {
     // Core app state
     @Published var diningHalls: [DiningHall]
+
     @Published var diningBalance: Double
-    
-    // Location-related state (will be used later)
+
     @Published var userLocation: CLLocation?
     @Published var locationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
-    
+
+    private let locationService = LocationService()
+
     init(diningHalls: [DiningHall] = SampleData.halls) {
         self.diningHalls = diningHalls
-        self.diningBalance = 300
+        locationService.delegate = self
     }
 
-    func reserve(from hall: DiningHall) {
-        // For now, a simple flat $10 reservation that cannot overdraft
-        guard diningBalance >= 10 else { return }
-        diningBalance -= 10
+    func requestLocationAccess() {
+        locationService.requestWhenInUseAuthorization()
+    }
+
+    func startLocationUpdates() {
+        locationService.startUpdatingLocation()
+    }
+
+    func stopLocationUpdates() {
+        locationService.stopUpdatingLocation()
+    }
+
+    // MARK: - LocationServiceDelegate
+
+    func locationService(_ service: LocationService,
+                         didUpdateAuthorization status: CLAuthorizationStatus) {
+        DispatchQueue.main.async {
+            self.locationAuthorizationStatus = status
+        }
+    }
+
+    func locationService(_ service: LocationService,
+                         didUpdateLocation location: CLLocation) {
+        DispatchQueue.main.async {
+            self.userLocation = location
+        }
     }
 }
