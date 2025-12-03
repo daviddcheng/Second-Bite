@@ -25,7 +25,7 @@ struct MapView: View {
     @State private var searchText: String = ""
     @State private var selectedHall: DiningHall?
 
-    // Halls filtered by the search bar
+    // Halls filtered by the search bar (for pins)
     private var filteredHalls: [DiningHall] {
         let halls = appViewModel.diningHalls
         guard !searchText.isEmpty else { return halls }
@@ -46,7 +46,6 @@ struct MapView: View {
                     // Dining hall pins
                     ForEach(filteredHalls) { hall in
                         Annotation(hall.name, coordinate: hall.coordinate) {
-                            // 👇 Make pin tappable to open detail
                             Button {
                                 selectedHall = hall
                             } label: {
@@ -67,10 +66,9 @@ struct MapView: View {
                 }
                 .mapStyle(.standard)
                 .mapControls {
-                    MapCompass()   // Apple’s built-in compass (top-right)
+                    MapCompass()
                     MapScaleView()
                 }
-                // Ask for location + start updates when map appears
                 .onAppear {
                     appViewModel.requestLocationAccess()
                     appViewModel.startLocationUpdates()
@@ -78,7 +76,6 @@ struct MapView: View {
                 .onDisappear {
                     appViewModel.stopLocationUpdates()
                 }
-                // Center map when we get a user location (iOS 17+ onChange)
                 .onChange(of: appViewModel.userLocation, initial: false) { _, newLocation in
                     guard let loc = newLocation else { return }
 
@@ -102,11 +99,14 @@ struct MapView: View {
                             TextField("Search dining halls", text: $searchText)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
+                                .submitLabel(.search)             // shows "Search" button on keyboard
+                                .onSubmit { performSearch() }     // 👈 when Return pressed
                         }
                         .padding(10)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
                         .frame(maxWidth: 310)
+
                         Spacer()
                     }
                     .padding(.top, 15)
@@ -132,7 +132,6 @@ struct MapView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
-            // 👇 When selectedHall is set, push detail view
             .navigationDestination(item: $selectedHall) { hall in
                 DiningHallDetailView(hall: hall)
                     .environmentObject(appViewModel)
@@ -152,6 +151,43 @@ struct MapView: View {
                                        longitudeDelta: 0.01)
             )
         )
+    }
+
+    /// Called when the user hits Return in the search field
+    private func performSearch() {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return }
+
+        let halls = appViewModel.diningHalls
+
+        // 1. Try exact match first
+        if let exact = halls.first(where: {
+            $0.name.compare(query, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }) {
+            goTo(hall: exact)
+            return
+        }
+
+        // 2. Otherwise first partial match
+        if let partial = halls.first(where: {
+            $0.name.localizedCaseInsensitiveContains(query)
+        }) {
+            goTo(hall: partial)
+        }
+    }
+
+    private func goTo(hall: DiningHall) {
+        // Center map on hall
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: hall.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.01,
+                                       longitudeDelta: 0.01)
+            )
+        )
+
+        // Open detail
+        selectedHall = hall
     }
 }
 
