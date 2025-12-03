@@ -12,38 +12,90 @@ import Foundation
 enum SampleData {
     static let halls: [DiningHall] = [
         DiningHall(
-            name: "North Dining Hall",
-            description: "Large dining hall with lots of options.",
-            latitude: 39.9522,
-            longitude: -75.1932,
+            name: "1920 Commons",
+            description: "Large central dining hall with a wide variety of classic and rotating options right by the Quad.",
+            latitude: 39.952284,
+            longitude: -75.195497,
             leftovers: [
                 LeftoverItem(
-                    name: "Margherita Pizza",
-                    quantity: 8,
+                    name: "Late Night Pizza Slices",
+                    quantity: 12,
                     isVegetarian: true
                 ),
                 LeftoverItem(
-                    name: "Grilled Chicken",
-                    quantity: 5
+                    name: "Grilled Chicken Bowls",
+                    quantity: 6
                 )
             ]
         ),
         DiningHall(
-            name: "South Dining Hall",
-            description: "Smaller hall, good vegetarian selection.",
-            latitude: 39.9505,
-            longitude: -75.1900,
+            name: "Hill House",
+            description: "Cozy residential dining hall popular for breakfast and comfort food.",
+            latitude: 39.955019,
+            longitude: -75.193946,
             leftovers: [
                 LeftoverItem(
-                    name: "Veggie Pasta",
+                    name: "Veggie Pasta Bar",
                     quantity: 10,
                     isVegetarian: true
                 ),
                 LeftoverItem(
                     name: "Gluten-Free Brownies",
-                    quantity: 6,
+                    quantity: 8,
                     isVegetarian: true,
                     isGlutenFree: true
+                )
+            ]
+        ),
+        DiningHall(
+            name: "English House",
+            description: "Fresh, modern dining hall on the east side of campus with lots of salad and grill options.",
+            latitude: 39.952980,
+            longitude: -75.199210,
+            leftovers: [
+                LeftoverItem(
+                    name: "Grain Bowls",
+                    quantity: 9,
+                    isVegetarian: true
+                ),
+                LeftoverItem(
+                    name: "Roasted Chicken",
+                    quantity: 7
+                )
+            ]
+        ),
+        DiningHall(
+            name: "Lauder College House",
+            description: "Scenic dining hall along the river with plenty of natural light and global cuisine stations.",
+            latitude: 39.952627,
+            longitude: -75.201540,
+            leftovers: [
+                LeftoverItem(
+                    name: "Stir-Fry Bar",
+                    quantity: 11,
+                    isVegetarian: true
+                ),
+                LeftoverItem(
+                    name: "Tandoori Chicken",
+                    quantity: 5
+                )
+            ]
+        ),
+        DiningHall(
+            name: "Falk Kosher Dining",
+            description: "Certified kosher dining hall with rotating hot entrées and salads.",
+            latitude: 39.954470,
+            longitude: -75.200510,
+            leftovers: [
+                LeftoverItem(
+                    name: "Falafel & Hummus Plates",
+                    quantity: 10,
+                    isVegetarian: true,
+                    isVegan: true
+                ),
+                LeftoverItem(
+                    name: "Kosher Chicken Cutlets",
+                    quantity: 6
                 )
             ]
         )
