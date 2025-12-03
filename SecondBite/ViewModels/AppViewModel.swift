@@ -22,6 +22,7 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
 
     init(diningHalls: [DiningHall] = SampleData.halls) {
         self.diningHalls = diningHalls
+        self.diningBalance = 300
         locationService.delegate = self
     }
 
@@ -51,5 +52,11 @@ final class AppViewModel: ObservableObject, LocationServiceDelegate {
         DispatchQueue.main.async {
             self.userLocation = location
         }
+    }
+    
+    func reserve(from hall: DiningHall) {
+            // For now, a simple flat $10 reservation that cannot overdraft
+            guard diningBalance >= 10 else { return }
+            diningBalance -= 10
     }
 }
