@@ -2,7 +2,32 @@
 //  ChatMessage.swift
 //  SecondBite
 //
-//  Created by Advaith Satish on 12/3/25.
+//  Created by Advaith Satish on 12/03/25.
 //
 
 import Foundation
+
+struct ChatMessage: Identifiable, Equatable {
+    let id: UUID
+    let content: String
+    let isFromUser: Bool
+    let timestamp: Date
+    
+    init(
+        id: UUID = UUID(),
+        content: String,
+        isFromUser: Bool,
+        timestamp: Date = Date()
+    ) {
+        self.id = id
+        self.content = content
+        self.isFromUser = isFromUser
+        self.timestamp = timestamp
+    }
+    
+    var formattedTime: String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: timestamp)
+    }
+}
