@@ -15,17 +15,13 @@ import MapKit
 struct MapView: View {
     @EnvironmentObject var appViewModel: AppViewModel
 
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 39.9522, longitude: -75.1932),
-            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-        )
-    )
+    // Start with automatic camera unless you prefer a region
+    @State private var cameraPosition: MapCameraPosition = .automatic
 
     @State private var searchText: String = ""
-    @State private var selectedHall: DiningHall?
+    @State private var selectedHall: DiningHall?        // ← for navigation
 
-    // Halls filtered by the search bar (for pins)
+    // Filtered hall list (used for pin display)
     private var filteredHalls: [DiningHall] {
         let halls = appViewModel.diningHalls
         guard !searchText.isEmpty else { return halls }
@@ -38,14 +34,14 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // MARK: Map
+                // MARK: - Apple Map
                 Map(position: $cameraPosition) {
-                    // 🔵 user location dot
-                    UserAnnotation()
+
+                    UserAnnotation()   // 🔵 user location dot
 
                     // Dining hall pins
                     ForEach(filteredHalls) { hall in
-                        Annotation(hall.name, coordinate: hall.coordinate) {
+                        Annotation("", coordinate: hall.coordinate) {
                             Button {
                                 selectedHall = hall
                             } label: {
@@ -66,7 +62,7 @@ struct MapView: View {
                 }
                 .mapStyle(.standard)
                 .mapControls {
-                    MapCompass()
+                    MapCompass()     // ← Apple compass (top-right)
                     MapScaleView()
                 }
                 .onAppear {
@@ -76,9 +72,10 @@ struct MapView: View {
                 .onDisappear {
                     appViewModel.stopLocationUpdates()
                 }
-                .onChange(of: appViewModel.userLocation, initial: false) { _, newLocation in
-                    guard let loc = newLocation else { return }
+                .onChange(of: appViewModel.userLocation, initial: false) { _, loc in
+                    guard let loc else { return }
 
+                    // Center map on user when first loaded
                     cameraPosition = .region(
                         MKCoordinateRegion(
                             center: loc.coordinate,
@@ -88,9 +85,9 @@ struct MapView: View {
                     )
                 }
 
-                // MARK: Overlays: search bar + center button
+                // MARK: - Overlays (search + center button)
                 VStack {
-                    // Search bar at top
+                    // SEARCH BAR
                     HStack {
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
@@ -99,14 +96,23 @@ struct MapView: View {
                             TextField("Search dining halls", text: $searchText)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
-                                .submitLabel(.search)             // shows "Search" button on keyboard
-                                .onSubmit { performSearch() }     // 👈 when Return pressed
+                                .submitLabel(.search)
+                                .onSubmit { performSearch() }
+
+                            if !searchText.isEmpty {
+                                Button {
+                                    searchText = ""
+                                    hideKeyboard()
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
                         .padding(10)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
-                        .frame(maxWidth: 310)
-
+                        .frame(maxWidth: 300)      // controls width
                         Spacer()
                     }
                     .padding(.top, 15)
@@ -114,7 +120,7 @@ struct MapView: View {
 
                     Spacer()
 
-                    // Center-on-user button at bottom-right
+                    // CENTER-ON-USER BUTTON
                     HStack {
                         Spacer()
                         Button(action: centerOnUserLocation) {
@@ -132,6 +138,8 @@ struct MapView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+
+            // NAVIGATION to DiningHallDetailView
             .navigationDestination(item: $selectedHall) { hall in
                 DiningHallDetailView(hall: hall)
                     .environmentObject(appViewModel)
@@ -139,7 +147,7 @@ struct MapView: View {
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - ACTIONS
 
     private func centerOnUserLocation() {
         guard let loc = appViewModel.userLocation else { return }
@@ -153,31 +161,31 @@ struct MapView: View {
         )
     }
 
-    /// Called when the user hits Return in the search field
+    /// When user hits Return in search bar
     private func performSearch() {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return }
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return }
 
         let halls = appViewModel.diningHalls
 
-        // 1. Try exact match first
+        // 1. Exact match
         if let exact = halls.first(where: {
-            $0.name.compare(query, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+            $0.name.compare(q, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
         }) {
             goTo(hall: exact)
             return
         }
 
-        // 2. Otherwise first partial match
+        // 2. Partial match
         if let partial = halls.first(where: {
-            $0.name.localizedCaseInsensitiveContains(query)
+            $0.name.localizedCaseInsensitiveContains(q)
         }) {
             goTo(hall: partial)
         }
     }
 
     private func goTo(hall: DiningHall) {
-        // Center map on hall
+        // Zoom to hall
         cameraPosition = .region(
             MKCoordinateRegion(
                 center: hall.coordinate,
@@ -186,8 +194,15 @@ struct MapView: View {
             )
         )
 
-        // Open detail
+        // Navigate to detail view
         selectedHall = hall
+
+        hideKeyboard()
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
     }
 }
 
