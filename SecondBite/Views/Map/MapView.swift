@@ -15,16 +15,13 @@ import MapKit
 struct MapView: View {
     @EnvironmentObject var appViewModel: AppViewModel
 
-    @State private var cameraPosition: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 39.9522, longitude: -75.1932),
-            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
-        )
-    )
+    // Start with automatic camera unless you prefer a region
+    @State private var cameraPosition: MapCameraPosition = .automatic
 
     @State private var searchText: String = ""
+    @State private var selectedHall: DiningHall?        // ← for navigation
 
-    // Halls filtered by the search bar
+    // Filtered hall list (used for pin display)
     private var filteredHalls: [DiningHall] {
         let halls = appViewModel.diningHalls
         guard !searchText.isEmpty else { return halls }
@@ -37,33 +34,37 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // MARK: Map
+                // MARK: - Apple Map
                 Map(position: $cameraPosition) {
-                    // 🔵 user location dot
-                    UserAnnotation()
+
+                    UserAnnotation()   // 🔵 user location dot
 
                     // Dining hall pins
                     ForEach(filteredHalls) { hall in
-                        Annotation(hall.name, coordinate: hall.coordinate) {
-                            VStack(spacing: 4) {
-                                Image(systemName: "mappin.circle.fill")
-                                    .font(.title)
+                        Annotation("", coordinate: hall.coordinate) {
+                            Button {
+                                selectedHall = hall
+                            } label: {
+                                VStack(spacing: 4) {
+                                    Image(systemName: "mappin.circle.fill")
+                                        .font(.title)
 
-                                Text(hall.name)
-                                    .font(.caption2)
-                                    .padding(4)
-                                    .background(.thinMaterial)
-                                    .cornerRadius(6)
+                                    Text(hall.name)
+                                        .font(.caption2)
+                                        .padding(4)
+                                        .background(.thinMaterial)
+                                        .cornerRadius(6)
+                                }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
                 .mapStyle(.standard)
                 .mapControls {
-                    MapCompass()   // ← Apple’s built-in compass (top-right)
+                    MapCompass()     // ← Apple compass (top-right)
                     MapScaleView()
                 }
-                // Ask for location + start updates when map appears
                 .onAppear {
                     appViewModel.requestLocationAccess()
                     appViewModel.startLocationUpdates()
@@ -71,10 +72,10 @@ struct MapView: View {
                 .onDisappear {
                     appViewModel.stopLocationUpdates()
                 }
-                // Center map when we get a user location (iOS 17+ onChange)
-                .onChange(of: appViewModel.userLocation, initial: false) { _, newLocation in
-                    guard let loc = newLocation else { return }
+                .onChange(of: appViewModel.userLocation, initial: false) { _, loc in
+                    guard let loc else { return }
 
+                    // Center map on user when first loaded
                     cameraPosition = .region(
                         MKCoordinateRegion(
                             center: loc.coordinate,
@@ -84,31 +85,42 @@ struct MapView: View {
                     )
                 }
 
-                // MARK: Overlays: search bar + center button
+                // MARK: - Overlays (search + center button)
                 VStack {
-                    // Search bar at top
+                    // SEARCH BAR
                     HStack {
                         HStack(spacing: 8) {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.secondary)
 
-                            TextField("Search", text: $searchText)
+                            TextField("Search dining halls", text: $searchText)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
+                                .submitLabel(.search)
+                                .onSubmit { performSearch() }
+
+                            if !searchText.isEmpty {
+                                Button {
+                                    searchText = ""
+                                    hideKeyboard()
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
                         .padding(10)
                         .background(.thinMaterial)
                         .clipShape(Capsule())
-                        .frame(maxWidth: 310)   // shorter bar
-                        // no extra leading padding here
-                        Spacer()                 // pushes everything else to the right
+                        .frame(maxWidth: 300)      // controls width
+                        Spacer()
                     }
                     .padding(.top, 15)
-                    .padding(.horizontal, 16)    // left edge at 16, right side free
+                    .padding(.horizontal, 16)
 
                     Spacer()
 
-                    // Center-on-user button at bottom-right
+                    // CENTER-ON-USER BUTTON
                     HStack {
                         Spacer()
                         Button(action: centerOnUserLocation) {
@@ -126,10 +138,16 @@ struct MapView: View {
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+
+            // NAVIGATION to DiningHallDetailView
+            .navigationDestination(item: $selectedHall) { hall in
+                DiningHallDetailView(hall: hall)
+                    .environmentObject(appViewModel)
+            }
         }
     }
 
-    // MARK: - Helpers
+    // MARK: - ACTIONS
 
     private func centerOnUserLocation() {
         guard let loc = appViewModel.userLocation else { return }
@@ -141,6 +159,50 @@ struct MapView: View {
                                        longitudeDelta: 0.01)
             )
         )
+    }
+
+    /// When user hits Return in search bar
+    private func performSearch() {
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return }
+
+        let halls = appViewModel.diningHalls
+
+        // 1. Exact match
+        if let exact = halls.first(where: {
+            $0.name.compare(q, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame
+        }) {
+            goTo(hall: exact)
+            return
+        }
+
+        // 2. Partial match
+        if let partial = halls.first(where: {
+            $0.name.localizedCaseInsensitiveContains(q)
+        }) {
+            goTo(hall: partial)
+        }
+    }
+
+    private func goTo(hall: DiningHall) {
+        // Zoom to hall
+        cameraPosition = .region(
+            MKCoordinateRegion(
+                center: hall.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.01,
+                                       longitudeDelta: 0.01)
+            )
+        )
+
+        // Navigate to detail view
+        selectedHall = hall
+
+        hideKeyboard()
+    }
+
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
+                                        to: nil, from: nil, for: nil)
     }
 }
 
