@@ -5,8 +5,6 @@
 //  Created by David Cheng on 11/30/25.
 //
 
-// hardcoded leftover data
-
 import Foundation
 
 enum SampleData {
@@ -38,12 +36,23 @@ enum SampleData {
                 LeftoverItem(
                     name: "Veggie Pasta Bar",
                     quantity: 10,
-                    isVegetarian: true
+                    price: 5.50,
+                    isVegetarian: true,
+                    isVegan: true
                 ),
                 LeftoverItem(
                     name: "Gluten-Free Brownies",
                     quantity: 8,
                     isVegetarian: true,
+                    isVegan: true,
+                    isHalal: true,
+                    isGlutenFree: true,
+                ),
+                LeftoverItem(
+                    name: "Lamb Kebab",
+                    quantity: 6,
+                    price: 7.50,
+                    isHalal: true,
                     isGlutenFree: true
                 )
             ]
